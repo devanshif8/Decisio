@@ -1,0 +1,143 @@
+# Decisio — Blueprint Part 1
+
+---
+
+## 1. PRODUCT DEFINITION
+
+### What Decisio Does
+
+Decisio ingests meeting transcripts and extracts **structured execution data** — not summaries.
+
+| It Extracts | Example |
+|---|---|
+| **Decisions** | "We will switch from REST to GraphQL for the mobile API." |
+| **Action Items** | "Ravi will set up the GraphQL server by Friday." |
+| **Owners** | Ravi |
+| **Deadlines** | Friday, April 10 |
+| **Blockers** | "Blocked on DevOps approval for the new endpoint." |
+| **Unresolved Items** | "We still haven't decided on the auth provider." |
+
+It then **remembers across meetings** — when meeting #4 references something from meeting #1, Decisio connects them. It surfaces what's stuck, what's delayed, and what was never resolved.
+
+**One-line definition:** Decisio is a decision tracking engine that turns meeting transcripts into accountable, trackable execution data with memory across meetings.
+
+### Target Users
+
+| User | Why They Need Decisio |
+|---|---|
+| **Engineering/tech leads** | Run 3–5 meetings/week. Constantly ask "didn't we already decide this?" |
+| **Startup founders (2–10 person teams)** | No PM, no process — decisions and tasks fall through the cracks weekly |
+| **Product managers** | Need one place to see what was decided vs. what actually shipped |
+| **Student/hackathon teams** | Lose track of who owns what after every call |
+
+**Primary persona:** A tech lead running multiple recurring meetings who has no reliable system to track what was decided and what's stuck.
+
+### Core Value Proposition
+
+> **Meetings create conversations. Decisio creates accountability.**
+> The difference between "we talked about it" and "here's who owns it, when it's due, and what's blocking it."
+
+---
+
+## 2. PROBLEM BREAKDOWN
+
+### What Actually Goes Wrong After Meetings
+
+**Problem 1: Decision Amnesia**
+Teams re-discuss the same decision across meetings because nobody recorded *what* was decided — only that a discussion happened. This wastes 20–30 minutes per recurring meeting.
+
+**Problem 2: Orphaned Action Items**
+Tasks get verbally assigned ("Ravi, can you handle the migration?") but never recorded with a clear owner + deadline. By the next meeting, nobody remembers the assignment. The task doesn't get done. Nobody notices until it blocks something else.
+
+**Problem 3: Invisible Blockers**
+Someone says "I can't move forward until DevOps approves the infra change." Nobody writes it down. Three meetings later, DevOps still hasn't approved. Nobody remembers who was supposed to follow up. The entire feature is silently delayed.
+
+**Problem 4: No Cross-Meeting Continuity**
+Meeting notes are per-meeting documents. There is no view that answers: *"What happened to the decision we made last Tuesday?"* You'd have to open 4 separate documents and Ctrl+F. Nobody does that — so things get lost.
+
+**Problem 5: Summaries ≠ Execution**
+A typical AI meeting summary says: *"The team discussed the Q3 roadmap and aligned on priorities."*
+That tells you **nothing** about who does what by when. Summaries describe what happened. They don't track what needs to happen next.
+
+### Why Current Tools Fail
+
+| Tool | What It Does | What It Misses |
+|---|---|---|
+| **Fireflies.ai** | Records, transcribes, summarizes | No structured decision extraction, no cross-meeting tracking, no blocker detection |
+| **Otter.ai** | Live transcription + keyword search | Summary-focused, no action item ownership, no deadline tracking |
+| **Notion AI** | Summarizes pasted meeting notes | Manual input. No extraction pipeline. No memory across meetings |
+| **Fellow.app** | Meeting agendas + manual action items | Requires people to enter items *during* the meeting. That's exactly what people don't do |
+| **Slack recaps** | Informal notes | Unstructured, unsearchable, buried in message history |
+
+**The shared gap:** Every tool treats each meeting as an isolated event. None build a **persistent execution graph** that connects decisions, actions, and blockers across time.
+
+### The Execution Gap — Defined
+
+```
+Meeting 1                Meeting 2                Meeting 3
+─────────                ─────────                ─────────
+"Let's do X"    →    "X is still pending"   →   "Wait, what was X?"
+ Decision made         No follow-up              Decision forgotten
+ Action assigned       Owner unclear             Re-discussed from scratch
+ Blocker mentioned     Blocker ignored           Time wasted
+```
+
+**The execution gap** is the space between *"we decided"* and *"it got done."*
+
+Every team has this gap. It grows with every meeting. Current tools don't address it because they optimize for **recording** meetings, not **tracking execution** from meetings.
+
+Decisio lives in that gap.
+
+---
+
+## 3. MVP DEFINITION (STRICT)
+
+### A. MUST HAVE — Ship These or It's Not Decisio
+
+| # | Feature | What It Does | Build Time |
+|---|---------|-------------|-----------|
+| 1 | **Transcript input** | Accept pasted text or `.txt` file upload. No audio. No integrations. Just text in. | 0.5 days |
+| 2 | **LLM extraction pipeline** | Send transcript to LLM → receive structured JSON: decisions, action items, owners, deadlines, blockers, unresolved items. Single API call with JSON mode. | 1.5 days |
+| 3 | **Meeting results view** | After processing, show: transcript on left, extracted data on right (tabbed: Decisions / Actions / Blockers). Each item is a card with relevant metadata. | 1 day |
+| 4 | **Action item tracker** | Dedicated page. Table with columns: task, owner, deadline, status. Filterable by status (open/done/blocked) and owner. Inline status toggle. Overdue items highlighted red. | 1 day |
+| 5 | **Blocker list** | Dedicated page. Shows active blockers with: description, who's blocked, what's causing it, linked action item, days since detected. "Resolve" button. | 0.5 days |
+| 6 | **Decision log** | Chronological list of all decisions across meetings. Shows confidence level, participants, which meeting it came from, whether it was later revisited. | 0.5 days |
+| 7 | **Meeting list** | All uploaded meetings in a list. Click to view details. Shows meeting date, title, number of extracted items, processing status. | 0.5 days |
+| 8 | **Cross-meeting linking** | When a new meeting is processed, compare its extractions against all open items. Detect: resolved actions, revisited decisions, still-active blockers. Create links. Surface "mentioned 3+ times without resolution" as stale. | 2 days |
+| 9 | **Dashboard overview** | Single page with stat cards: total meetings, open actions, overdue actions, active blockers, stale items. Plus "needs attention" section showing overdue + blocked items. | 1 day |
+| 10 | **Auth** | Email/password signup + login. Each user sees only their own data. | 0.5 days |
+
+**Total estimated build time: ~9 days** (leaves 5 days buffer in 14-day plan for polish, testing, edge cases, and demo prep)
+
+### B. NICE TO HAVE — Do Not Build in MVP
+
+| Feature | Why Exclude | Add When |
+|---------|------------|----------|
+| Audio upload + Whisper transcription | Adds file storage, processing queues, async jobs — 3x complexity for one input method | v1.1 |
+| Zoom/Google Meet bot | OAuth, WebSocket, bot registration — this is a separate product | v2.0 |
+| Natural language query ("What did we decide about pricing?") | Requires vector DB + RAG pipeline. Users can browse the dashboard for now | v1.2 |
+| Team workspaces / multi-user | Single-user is sufficient. Multi-tenant auth is a rabbit hole | v1.1 |
+| Slack/email notifications | 1-day add-on. Not core to proving the concept | v1.1 |
+| Export to Notion/Jira/Linear | Integration work. Post-MVP | v1.1 |
+| AI-generated follow-up agendas | Cool but not critical. Core extraction must work first | v1.2 |
+| Calendar integration | Scope creep | v2.0 |
+| Custom prompt tuning UI | Users don't need this. You tune prompts in code | Never (for MVP) |
+
+### MVP Acceptance Test
+
+The MVP is done when this flow works end-to-end:
+
+```
+1. User signs up and logs in
+2. User uploads a meeting transcript (pasted text)
+3. System processes it in <10 seconds
+4. User sees: 3 decisions, 5 action items, 1 blocker extracted
+5. User marks 2 action items as "done"
+6. User uploads a SECOND meeting transcript
+7. System detects: 1 action from meeting #1 was referenced as completed
+8. Dashboard shows: 3 open actions, 1 overdue, 1 active blocker
+9. User can filter actions by owner and status
+10. User can see a decision that was revisited across 2 meetings
+```
+
+If all 10 steps work → **MVP is shipped.**

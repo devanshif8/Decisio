@@ -83,14 +83,6 @@ frontend/
     services/API.js
 ```
 
-## Roadmap
-
-- [ ] Auth — API is currently open
-- [ ] Move `BASE` URL into `frontend/.env`
-- [ ] Replace substring-based parent matching with embeddings
-- [ ] Tests
-- [ ] Multi-user / team workspaces
-
 ## License
 
 MIT

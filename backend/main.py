@@ -97,6 +97,8 @@ def _persist_analysis(db: Session, ai_result, transcript: str = None, title: str
                 assignee=d.assignee,
                 status=d.status,
                 parent_decision_id=d.parent_decision_id,
+                predicted_priority=d.predicted_priority,
+                user_priority=d.user_priority,
                 created_at=d.created_at,
             )
             for d in saved_decisions
@@ -239,6 +241,19 @@ async def update_decision_status(decision_id: int, payload: dict, db: Session = 
     return {"id": decision.id, "status": decision.status}
 
 
+@app.patch("/decisions/{decision_id}/priority")
+async def update_decision_priority(decision_id: int, payload: dict, db: Session = Depends(get_db)):
+    decision = db.query(DecisionModel).filter(DecisionModel.id == decision_id).first()
+    if not decision:
+        raise HTTPException(status_code=404, detail="Decision not found")
+    new_priority = payload.get("priority")
+    if new_priority not in (None, "High", "Medium", "Low"):
+        raise HTTPException(status_code=400, detail="Invalid priority")
+    decision.user_priority = new_priority
+    db.commit()
+    return {"id": decision.id, "user_priority": decision.user_priority}
+
+
 # ──────────────────────────────────────────
 # ML Endpoints
 # ──────────────────────────────────────────
@@ -255,6 +270,7 @@ def _decisions_to_dicts(decisions):
             "assignee": d.assignee,
             "status": d.status,
             "meeting_id": d.meeting_id,
+            "user_priority": d.user_priority,
         }
         for d in decisions
     ]

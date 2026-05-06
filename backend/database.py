@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import create_engine, Column, Integer, String, Float, Text, DateTime, ForeignKey, JSON
+from sqlalchemy import create_engine, Column, Integer, String, Float, Text, DateTime, ForeignKey, JSON, text
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import datetime
 
@@ -37,6 +37,7 @@ class Decision(Base):
     parent_decision_id = Column(Integer, ForeignKey("decisions.id"), nullable=True)
     topic_cluster = Column(Integer, nullable=True)
     predicted_priority = Column(String, nullable=True)  # High, Medium, Low
+    user_priority = Column(String, nullable=True)  # User override: High, Medium, Low
     created_at = Column(DateTime, default=datetime.utcnow)
 
     meeting = relationship("Meeting", back_populates="decisions")
@@ -45,6 +46,13 @@ class Decision(Base):
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+    # Lightweight column-add migration for existing SQLite DBs
+    with engine.connect() as conn:
+        try:
+            conn.execute(text("ALTER TABLE decisions ADD COLUMN user_priority VARCHAR"))
+            conn.commit()
+        except Exception:
+            pass
 
 
 def get_db():

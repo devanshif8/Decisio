@@ -55,6 +55,16 @@ export const updateDecisionStatus = async (id, status) => {
     return response.json();
 };
 
+export const updateDecisionPriority = async (id, priority) => {
+    const response = await fetch(`${BASE}/decisions/${id}/priority`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priority }),
+    });
+    if (!response.ok) throw new Error("Failed to update priority");
+    return response.json();
+};
+
 export const getMLInsights = async () => {
     const response = await fetch(`${BASE}/ml/insights`, { method: "POST" });
     if (!response.ok) {

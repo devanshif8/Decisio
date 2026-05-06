@@ -195,7 +195,13 @@ class PriorityPredictor:
             conf = d.get("confidence_score", 0.5)
 
             meta_features.append(self._extract_meta_features(combined_text, conf, num_actions))
-            labels.append(_heuristic_priority(combined_text, conf, num_actions))
+
+            # Prefer user-set label; fall back to heuristic so we still have a target
+            user_label = d.get("user_priority")
+            if user_label in ("High", "Medium", "Low"):
+                labels.append(user_label)
+            else:
+                labels.append(_heuristic_priority(combined_text, conf, num_actions))
 
         # Build combined feature matrix: TF-IDF + hand-crafted
         tfidf_matrix = self.vectorizer.fit_transform(texts).toarray()

@@ -42,6 +42,7 @@ class DecisionOut(BaseModel):
     parent_decision_id: Optional[int] = None
     topic_cluster: Optional[int] = None
     predicted_priority: Optional[str] = None
+    user_priority: Optional[str] = None
     created_at: datetime
 
     class Config:
